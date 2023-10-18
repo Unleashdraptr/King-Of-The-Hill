@@ -10,13 +10,14 @@ public class Enemy_AI : MonoBehaviour
     //Movement
     public Transform PlayerPos;
     //Will be given to the AI when they spawn in
-    private float DirMultiplier;
-    private Transform[] JumpPoints;
-    private Transform[] LandingPoints;
-    private bool IsAttacking;
-    public float Attacking;
+    public float DirMultiplier;
+    public Transform JumpPoint;
+    public Transform LandingPoint;
 
-    //Stats
+    private bool IsAttacking;
+    private float Attacking;
+
+    [Header("Class Stats")]
     public int Health;
     public int Attack;
     public float AttackSpeed;
@@ -25,25 +26,20 @@ public class Enemy_AI : MonoBehaviour
 
     private void Start()
     {
-        LandingPoints = GameObject.Find("LandingPoints").GetComponentsInChildren<Transform>();
-        JumpPoints = GameObject.Find("JumpPoints").GetComponentsInChildren<Transform>();
         CurrentState = AIState.Walking;
     }
     // Update is called once per frame
     void Update()
     {
-        //This loops through the designated points at which they'll jump to see if they made it there already
-        foreach (Transform Pos in JumpPoints)
+        Debug.Log((JumpPoint.position.x - transform.position.x) * DirMultiplier);
+        Debug.Log(0.5f);
+        if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f)
         {
-            //If it finds one then lock the AI out of any other attacking
-            if (transform == Pos)
-            {
-                AIJump(Pos);
-                CurrentState = AIState.Jumping;
-            }
+            AIJump(JumpPoint);
+            CurrentState = AIState.Jumping;
         }
         //This locks the AI from randomly moving or attacking when jumping - A moment of weakness for them
-        if (CurrentState != AIState.Jumping && Attacking <= 0)
+        else if (CurrentState != AIState.Jumping && Attacking <= 0)
         {
             //Function to check the player position against its own and will setup for the attack
             if (CheckPlayerPos())
@@ -60,12 +56,9 @@ public class Enemy_AI : MonoBehaviour
         //Checks to see if they landed yet
         else
         {
-            foreach (Transform Pos in LandingPoints)
+            if (transform == LandingPoint)
             {
-                if (transform == Pos)
-                {
-                    CurrentState = AIState.Attacking_Pylon;
-                }
+                CurrentState = AIState.Attacking_Pylon;
             }
         }
     }
