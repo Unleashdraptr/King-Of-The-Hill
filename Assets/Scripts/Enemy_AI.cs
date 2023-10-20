@@ -12,6 +12,7 @@ public class Enemy_AI : MonoBehaviour
     //Will be given to the AI when they spawn in
     public float DirMultiplier;
     public Transform JumpPoint;
+    public float JumpDelay;
     public Transform LandingPoint;
 
     private bool IsAttacking;
@@ -26,16 +27,15 @@ public class Enemy_AI : MonoBehaviour
 
     private void Start()
     {
+        JumpDelay = 1.75f;
         CurrentState = AIState.Walking;
     }
     // Update is called once per frame
     void Update()
     {
-        Debug.Log((JumpPoint.position.x - transform.position.x) * DirMultiplier);
-        Debug.Log(0.5f);
-        if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f)
+        if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f && CurrentState != AIState.Jumping)
         {
-            AIJump(JumpPoint);
+            AIJump();
             CurrentState = AIState.Jumping;
         }
         //This locks the AI from randomly moving or attacking when jumping - A moment of weakness for them
@@ -56,8 +56,10 @@ public class Enemy_AI : MonoBehaviour
         //Checks to see if they landed yet
         else
         {
-            if (transform == LandingPoint)
+            JumpDelay -= Time.deltaTime;
+            if (JumpDelay <= 0)
             {
+                transform.position = new(LandingPoint.position.x + Random.Range(-1, 1), LandingPoint.position.y, 0);
                 CurrentState = AIState.Attacking_Pylon;
             }
         }
@@ -66,8 +68,8 @@ public class Enemy_AI : MonoBehaviour
     {
         return false;
     }
-    void AIJump(Transform JumpPoint)
+    void AIJump()
     {
-
+        //Start the Animation here
     }
 }
