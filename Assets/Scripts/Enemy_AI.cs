@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Enemy_AI : MonoBehaviour
 {
-    public enum AIState {Walking, Jumping, Attacking_Player, Attacking_Pylon }
+    public enum AIState { Walking, Jumping, Attacking_Player, Attacking_Pylon }
     public AIState CurrentState;
     //Movement
     public Transform PlayerPos;
@@ -13,10 +13,15 @@ public class Enemy_AI : MonoBehaviour
     public float DirMultiplier;
     public Transform JumpPoint;
     public float JumpDelay;
+    public int JumpType;
     public Transform LandingPoint;
+    public LayerMask PlayerLayer;
 
-    private bool IsAttacking;
-    private float Attacking;
+    private bool HasLanded;
+    public bool IsAttacking;
+    public float Attacking;
+    private Animator Animate;
+    private Vector3 StayingPos;
 
     [Header("Class Stats")]
     public int Health;
@@ -27,49 +32,124 @@ public class Enemy_AI : MonoBehaviour
 
     private void Start()
     {
-        JumpDelay = 1.75f;
+        PlayerPos = GameObject.Find("Player").transform;
+        Animate = GetComponent<Animator>();
+        JumpDelay = 2.5f;
         CurrentState = AIState.Walking;
     }
     // Update is called once per frame
     void Update()
     {
-        if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f && CurrentState != AIState.Jumping)
+        if (!HasLanded)
         {
-            AIJump();
-            CurrentState = AIState.Jumping;
-        }
-        //This locks the AI from randomly moving or attacking when jumping - A moment of weakness for them
-        else if (CurrentState != AIState.Jumping && Attacking <= 0)
-        {
-            //Function to check the player position against its own and will setup for the attack
-            if (CheckPlayerPos())
+            if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f && CurrentState != AIState.Jumping)
             {
-                CurrentState = AIState.Attacking_Player;
+                Animate.SetBool("HasJumped", true);
+                Animate.SetInteger("JumpType", JumpType);
+                CurrentState = AIState.Jumping;
             }
-            //Otherwise just move
-            else
+            //This locks the AI from randomly moving or attacking when jumping - A moment of weakness for them
+            else if (CurrentState != AIState.Jumping && Attacking <= 0)
             {
-                transform.Translate(Speed * DirMultiplier * Time.deltaTime, 0f, 0f);
-                CurrentState = AIState.Walking;
+                //Function to check the player position against its own and will setup for the attack
+                if (CheckPlayerPos())
+                {
+                    StartAttack();
+                    CurrentState = AIState.Attacking_Player;
+                }
+                //Otherwise just move
+                else
+                {
+                    transform.Translate(Speed * DirMultiplier * Time.deltaTime, 0f, 0f);
+                    CurrentState = AIState.Walking;
+                }
+            }
+            //Checks to see if they landed yet
+            else if (CurrentState == AIState.Jumping)
+            {
+                JumpDelay -= Time.deltaTime;
+                if (JumpDelay <= 0)
+                {
+                    StayingPos = new(LandingPoint.position.x + Random.Range(-1, 1), LandingPoint.position.y, 0);
+                    transform.position = StayingPos;
+                    CurrentState = AIState.Attacking_Pylon;
+                    HasLanded = true;
+                }
             }
         }
-        //Checks to see if they landed yet
         else
         {
-            JumpDelay -= Time.deltaTime;
-            if (JumpDelay <= 0)
+            transform.position = StayingPos;
+            if (Attacking <= 0)
             {
-                transform.position = new(LandingPoint.position.x + Random.Range(-1, 1), LandingPoint.position.y, 0);
-                CurrentState = AIState.Attacking_Pylon;
+                if (CheckPlayerPos())
+                    CurrentState = AIState.Attacking_Player;
+                else
+                    CurrentState = AIState.Attacking_Pylon;
+                StartAttack();
             }
         }
-    }
-    bool CheckPlayerPos()
-    {
-        return false;
-    }
-    void AIJump()
-    {
-        //Start the Animation here
+
+
+
+        if (IsAttacking)
+        {
+            Attacking -= Time.deltaTime;
+            if (Attacking <= 0)
+            {
+                if (!CheckPlayerPos())
+                {
+                    if (HasLanded)
+                        CurrentState = AIState.Attacking_Pylon;
+                    else
+                    {
+                        CurrentState = AIState.Walking;
+                        IsAttacking = false;
+                        Animate.SetBool("IsAttacking", false);
+                    }
+                }
+                else
+                {
+                    CurrentState = AIState.Attacking_Player;
+                    StartAttack();
+                }
+            }
+        }
+        bool CheckPlayerPos()
+        {
+            if (Vector2.Distance(new(transform.position.x, transform.position.y), new(PlayerPos.position.x, PlayerPos.position.y)) < 1.5f)
+                return true;
+            return false;
+        }
+
+        void StartAttack()
+        {
+            Animate.SetBool("IsAttacking", true);
+            IsAttacking = true;
+            Attacking = 1.5f;
+            if (CurrentState == AIState.Attacking_Player)
+                StartCoroutine(AttackingPlayer());
+            else if (CurrentState == AIState.Attacking_Pylon)
+                StartCoroutine(AttackingPylon());
+        }
+        IEnumerator AttackingPlayer()
+        {
+            IsAttacking = true;
+            Attacking = 1.5f;
+            yield return new WaitForSeconds(0.5f);
+            if (Physics.CheckSphere(transform.position, 2.5f, PlayerLayer))
+            {
+                Debug.Log("Hit Player");
+                //PlayerPos.GetComponent<PlayerScript>().TakeDmg();
+            }
+        }
+        IEnumerator AttackingPylon()
+        {
+            IsAttacking = true;
+            Attacking = 1.5f;
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log("Hit Pylon");
+            //GameObject.Find("Pylon").GetComponent<Health>().TakeDmg();
+        }
     }
 }

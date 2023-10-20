@@ -73,31 +73,35 @@ public class WaveManager : MonoBehaviour
             {
                 case < 25:
                     //Top Left
-                    Pos = new(-21, 3, 0);
+                    Pos = new(-22.25f, 2.5f, 0);
                     Dir = 1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[1];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[1];
+                    Enemy.GetComponent<Enemy_AI>().JumpType = 1;
                     break;
                 case < 50:
                     //Top Right
-                    Pos = new(21, 3, 0);
+                    Pos = new(22.25f, 2.5f, 0);
                     Dir = -1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[2];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[2];
+                    Enemy.GetComponent<Enemy_AI>().JumpType = 2;
                     break;
                 case < 75:
                     //Bottom Left
-                    Pos = new(-21, -9, 0);
+                    Pos = new(-22.25f, -9.75f, 0);
                     Dir = 1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[3];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[1];
+                    Enemy.GetComponent<Enemy_AI>().JumpType = 3;
                     break;
                 case < 100:
                     //Bottom Right
-                    Pos = new(21, -9, 0);
+                    Pos = new(22.25f, -9.75f, 0);
                     Dir = -1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[4];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[2];
+                    Enemy.GetComponent<Enemy_AI>().JumpType = 4;
                     break;
             }
             Enemy.transform.position = Pos;
