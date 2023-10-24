@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Enemy_AI : MonoBehaviour
 {
-    public enum AIState { Walking, Jumping, Attacking_Player, Attacking_Pylon }
+    public enum AIState { Walking, Jumping, Attacking_Player, Attacking_Pylon, Dead }
     public AIState CurrentState;
     //Movement
     public Transform PlayerPos;
@@ -40,6 +40,14 @@ public class Enemy_AI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Health <= 0)
+        {
+            CurrentState = AIState.Dead;
+            HasLanded = false;
+            IsAttacking = false;
+            Animate.SetTrigger("HasDied");
+            StartCoroutine(Death());
+        }
         if (!HasLanded)
         {
             if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f && CurrentState != AIState.Jumping)
@@ -49,7 +57,7 @@ public class Enemy_AI : MonoBehaviour
                 CurrentState = AIState.Jumping;
             }
             //This locks the AI from randomly moving or attacking when jumping - A moment of weakness for them
-            else if (CurrentState != AIState.Jumping && Attacking <= 0)
+            else if (CurrentState != AIState.Jumping && Attacking <= 0 && CurrentState != AIState.Dead)
             {
                 //Function to check the player position against its own and will setup for the attack
                 if (CheckPlayerPos())
@@ -65,7 +73,7 @@ public class Enemy_AI : MonoBehaviour
                 }
             }
             //Checks to see if they landed yet
-            else if (CurrentState == AIState.Jumping)
+            else if (CurrentState == AIState.Jumping && CurrentState != AIState.Dead)
             {
                 JumpDelay -= Time.deltaTime;
                 if (JumpDelay <= 0)
@@ -115,41 +123,47 @@ public class Enemy_AI : MonoBehaviour
                 }
             }
         }
-        bool CheckPlayerPos()
-        {
-            if (Vector2.Distance(new(transform.position.x, transform.position.y), new(PlayerPos.position.x, PlayerPos.position.y)) < 1.5f)
-                return true;
-            return false;
-        }
+    }
+    bool CheckPlayerPos()
+    {
+        if (Vector2.Distance(new(transform.position.x, transform.position.y), new(PlayerPos.position.x, PlayerPos.position.y)) < 1.5f)
+            return true;
+        return false;
+    }
 
-        void StartAttack()
+    void StartAttack()
+    {
+        Animate.SetBool("IsAttacking", true);
+        IsAttacking = true;
+        Attacking = 1.5f;
+        if (CurrentState == AIState.Attacking_Player)
+            StartCoroutine(AttackingPlayer());
+        else if (CurrentState == AIState.Attacking_Pylon)
+            StartCoroutine(AttackingPylon());
+    }
+    IEnumerator AttackingPlayer()
+    {
+        IsAttacking = true;
+        Attacking = 1.5f;
+        yield return new WaitForSeconds(0.5f);
+        if (Physics.CheckSphere(transform.position, 2.5f, PlayerLayer))
         {
-            Animate.SetBool("IsAttacking", true);
-            IsAttacking = true;
-            Attacking = 1.5f;
-            if (CurrentState == AIState.Attacking_Player)
-                StartCoroutine(AttackingPlayer());
-            else if (CurrentState == AIState.Attacking_Pylon)
-                StartCoroutine(AttackingPylon());
+            Debug.Log("Hit Player");
+            //PlayerPos.GetComponent<PlayerScript>().TakeDmg();
         }
-        IEnumerator AttackingPlayer()
-        {
-            IsAttacking = true;
-            Attacking = 1.5f;
-            yield return new WaitForSeconds(0.5f);
-            if (Physics.CheckSphere(transform.position, 2.5f, PlayerLayer))
-            {
-                Debug.Log("Hit Player");
-                //PlayerPos.GetComponent<PlayerScript>().TakeDmg();
-            }
-        }
-        IEnumerator AttackingPylon()
-        {
-            IsAttacking = true;
-            Attacking = 1.5f;
-            yield return new WaitForSeconds(0.5f);
-            Debug.Log("Hit Pylon");
-            //GameObject.Find("Pylon").GetComponent<Health>().TakeDmg();
-        }
+    }
+    IEnumerator AttackingPylon()
+    {
+        IsAttacking = true;
+        Attacking = 1.5f;
+        yield return new WaitForSeconds(0.5f);
+        Debug.Log("Hit Pylon");
+        //GameObject.Find("Pylon").GetComponent<Health>().TakeDmg();
+    }
+
+    IEnumerator Death()
+    {
+        yield return new WaitForSeconds(1.25f);
+        Destroy(gameObject);
     }
 }
