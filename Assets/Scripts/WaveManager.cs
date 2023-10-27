@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Xml;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -15,7 +16,9 @@ public class WaveManager : MonoBehaviour
     private bool WaveTimered;
 
     private Transform EnemyStorage;
+    [HideInInspector]
     public Transform[] JumpPoints;
+    [HideInInspector]
     public Transform[] LandingPoints;
 
     [Header("This is what enemies will spawn is stored (Hover over for more info)")]
@@ -35,26 +38,32 @@ public class WaveManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (CountDowning)
-            Countdown -= 1 * Time.deltaTime;
-        if(WaveTimered)
-            WaveTimer -= 1 * Time.deltaTime;
+        if (!GameManager.PauseState)
+        {
+            if (WaveTimered)
+                WaveTimer -= 1 * Time.deltaTime;
+            if (CountDowning && WaveNum != 20)
+                Countdown -= 1 * Time.deltaTime;
+            else if (WaveTimer <= 0 && CountDowning == false && WaveNum == 20)
+                GameObject.Find("GameManager").GetComponent<GameManager>().WonGame();
 
-        if ((WaveTimer <= 0 || EnemyStorage.transform.childCount == 0) && CountDowning != true && WaveNum != 20)
-        {
-            Countdown = 10;
-            WaveTimered = false;
-            CountDowning = true;
-        }
-        if(Countdown <= 0 && CountDowning)
-        {
-            CountDowning = false;
-            WaveNum += 1;
-            WaveTimered = true;
-            WaveTimer = 30;
-            for(int i = 0; i < WaveNums.Length; i++)
+            if (Countdown <= 0 && CountDowning)
             {
-                StartCoroutine(SpawnEnemies(WaveNums[i].EnemyToInstantiate, WaveNums[i].WaveSpawns[WaveNum]));
+                CountDowning = false;
+                WaveTimered = true;
+                WaveNum += 1;
+                WaveTimer = 30;
+                for (int i = 0; i < WaveNums.Length; i++)
+                {
+                    StartCoroutine(SpawnEnemies(WaveNums[i].EnemyToInstantiate, WaveNums[i].WaveSpawns[WaveNum]));
+                }
+            }
+            if ((WaveTimer <= 0 || EnemyStorage.transform.childCount == 0) && CountDowning != true && WaveTimered == true)
+            {
+                WaveTimer = 0;
+                Countdown = 10;
+                WaveTimered = false;
+                CountDowning = true;
             }
         }
     }
@@ -73,7 +82,7 @@ public class WaveManager : MonoBehaviour
             {
                 case < 25:
                     //Top Left
-                    Pos = new(-22.25f, 2.5f, 0);
+                    Pos = new(-22.25f, 3f, 0);
                     Dir = 1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[1];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[1];
@@ -81,15 +90,16 @@ public class WaveManager : MonoBehaviour
                     break;
                 case < 50:
                     //Top Right
-                    Pos = new(22.25f, 2.5f, 0);
+                    Pos = new(22.25f, 3f, 0);
                     Dir = -1;
+                    Enemy.GetComponent<SpriteRenderer>().flipX = true;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[2];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[2];
                     Enemy.GetComponent<Enemy_AI>().JumpType = 2;
                     break;
                 case < 75:
                     //Bottom Left
-                    Pos = new(-22.25f, -9.75f, 0);
+                    Pos = new(-22.25f, -9.175f, 0);
                     Dir = 1;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[3];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[1];
@@ -97,8 +107,9 @@ public class WaveManager : MonoBehaviour
                     break;
                 case < 100:
                     //Bottom Right
-                    Pos = new(22.25f, -9.75f, 0);
+                    Pos = new(22.25f, -9.175f, 0);
                     Dir = -1;
+                    Enemy.GetComponent<SpriteRenderer>().flipX = true;
                     Enemy.GetComponent<Enemy_AI>().JumpPoint = JumpPoints[4];
                     Enemy.GetComponent<Enemy_AI>().LandingPoint = LandingPoints[2];
                     Enemy.GetComponent<Enemy_AI>().JumpType = 4;
