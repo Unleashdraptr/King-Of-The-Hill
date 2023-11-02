@@ -14,11 +14,7 @@ public class GameManager : MonoBehaviour
     int WaveCountdown;
     WaveManager WaveNums;
 
-
-    //Stuff to do with Player Input and how that changes the UI
-    public GameObject[] CDTimers;
-    public TextMeshProUGUI AmmoCount;
-
+    public Slider HealthBar;
 
     //Win or Lost States and their UI to corespond to it
     public GameObject WinState;
@@ -40,11 +36,12 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        HealthBar.value = GameObject.Find("Player").GetComponent<PlayerControls>().Hp;
+
         WaveTimer.SetText(Mathf.Round(WaveNums.Countdown + WaveNums.WaveTimer).ToString());
         if(Mathf.Round(WaveNums.Countdown + WaveNums.WaveTimer) <= 1)
-            WaveNum.SetText("Wave: " + (WaveNums.WaveNum + 1).ToString());
+            WaveNum.SetText("Wave: " + (WaveNums.WaveNum + 1) + "/20".ToString());
     }
-
     public void WonGame()
     {
         WinState.SetActive(true);
@@ -58,5 +55,6 @@ public class GameManager : MonoBehaviour
         RetryButton.SetActive(true);
         PauseState = true; 
         WaveTimer.gameObject.SetActive(false);
+        GameObject.Find("Wave Num").GetComponent<TextMeshProUGUI>().SetText((WaveNums.WaveNum + 1).ToString());
     }
 }

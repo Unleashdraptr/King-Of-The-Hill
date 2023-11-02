@@ -42,14 +42,6 @@ public class Enemy_AI : MonoBehaviour
     {
         if (!GameManager.PauseState)
         {
-            if (Health <= 0)
-            {
-                CurrentState = AIState.Dead;
-                HasLanded = false;
-                IsAttacking = false;
-                Animate.SetTrigger("HasDied");
-                StartCoroutine(Death());
-            }
             if (!HasLanded)
             {
                 if ((JumpPoint.position.x - transform.position.x) * DirMultiplier <= 0.5f && CurrentState != AIState.Jumping)
@@ -134,6 +126,21 @@ public class Enemy_AI : MonoBehaviour
         return false;
     }
 
+    public void TakeDmg(int Dmg)
+    {
+        if (Dmg - Defense <= 0)
+            Health -= 1;
+        else
+            Health -= Dmg - Defense;
+        if (Health <= 0)
+        {
+            CurrentState = AIState.Dead;
+            HasLanded = false;
+            IsAttacking = false;
+            Animate.SetTrigger("HasDied");
+            StartCoroutine(Death());
+        }
+    }
     void StartAttack()
     {
         Animate.SetBool("IsAttacking", true);
@@ -151,8 +158,7 @@ public class Enemy_AI : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         if (Physics.CheckSphere(transform.position, 2.5f, PlayerLayer))
         {
-            Debug.Log("Hit Player");
-            //PlayerPos.GetComponent<PlayerScript>().TakeDmg();
+            StartCoroutine(PlayerPos.GetComponent<PlayerControls>().TakeDmg(Attack));
         }
     }
     IEnumerator AttackingPylon()

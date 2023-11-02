@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PylonScript : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class PylonScript : MonoBehaviour
     public int Hp;
     public int Defense;
 
+
+    public Slider Healthbar;
     private bool Timer;
     private float CountDown;
     // Start is called before the first frame update
@@ -21,16 +24,19 @@ public class PylonScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-            if (Hp <= 0)
-            {
-                Hp = 0;
-                Timer = true;
-                GameManager.PauseState = true;
-            }
-            if (CountDown <= 0 && Hp == 0)
-                GameObject.Find("GameManager").GetComponent<GameManager>().LostGame();
-            if (Timer)
-                CountDown -= Time.deltaTime;
+        Healthbar.value = Hp;
+        if (Hp <= 0)
+        {
+            Hp = 0;
+            Timer = true;
+            GameManager.PauseState = true;
+        }
+        if (CountDown <= 0 && Hp == 0)
+        {
+            GameObject.Find("GameManager").GetComponent<GameManager>().LostGame();
+        }
+        if (Timer)
+            CountDown -= Time.deltaTime;
     }
 
     public void TakeDmg(int Attack)
