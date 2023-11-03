@@ -32,6 +32,8 @@ public class GameManager : MonoBehaviour
         LostState.SetActive(false);
         RetryButton.SetActive(false);
         WaveTimer.gameObject.SetActive(true);
+        Time.timeScale = 1.0f;
+        PauseState = false;
     }
 
     void Update()

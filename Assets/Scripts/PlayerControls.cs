@@ -20,8 +20,6 @@ public class PlayerControls : MonoBehaviour
 
     public int Hp;
     public int Defense;
-    public float Ab1CoolDown;
-    public float Ab2CoolDown;
     public GameObject MagicBoltPrefab;
 
 
@@ -92,17 +90,16 @@ public class PlayerControls : MonoBehaviour
                 rb.AddForce(Vector3.up * JumpSpeed, ForceMode.Impulse);
             }
             //Soft Attack
-            if (Input.GetKeyDown(KeyCode.Mouse0) && !Attacking && Ab1CoolDown <= 0)
+            if (Input.GetKeyDown(KeyCode.Mouse0) && !Attacking)
             {
                 StartCoroutine(WeakAttack());
                 moveState = MoveState.WEAK_ATTACKING;
                 AttackTimer = 0.5f;
                 Attacking = true;
                 Anim.SetBool("IsAttacking", true);
-                Ab1CoolDown = 0.5f;
             }
             //Strong Attack
-            if (Input.GetKeyDown(KeyCode.Q) && !Attacking && Physics.CheckSphere(Feet.position, 0.1f, FloorMask) && Ab2CoolDown <= 0)
+            if (Input.GetKeyDown(KeyCode.Q) && !Attacking && Physics.CheckSphere(Feet.position, 0.1f, FloorMask))
             {
                 StartCoroutine(StrongAttack());
                 moveState = MoveState.STRONG_ATTACKING;
@@ -110,7 +107,6 @@ public class PlayerControls : MonoBehaviour
                 Attacking = true;
                 Anim.SetBool("IsAttacking", true);
                 Anim.SetBool("IsHeavyAttack", true);
-                Ab2CoolDown = 8;
             }
         }
     }
